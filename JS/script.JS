@@ -206,10 +206,23 @@ async function copyToClipboard(text) {
   throw new Error("لا يدعم المتصفح خاصية النسخ.");
 }
 
-function requestClipboardPermission() {
+async function checkClipboardPermission() {
+  if (navigator.permissions && navigator.permissions.query) {
+    try {
+      const permissionStatus = await navigator.permissions.query({ name: 'clipboard-write' });
+      return permissionStatus.state === 'granted';
+    } catch (err) {
+      console.warn("Permissions API failed:", err);
+    }
+  }
+  return false;
+}
+
+async function requestClipboardPermission() {
   const clipboardPermission = localStorage.getItem("clipboardPermission");
-  if (clipboardPermission === "granted") {
+  if (clipboardPermission === "granted" || await checkClipboardPermission()) {
     document.getElementById("requestClipboardBtn").style.display = "none";
+    localStorage.setItem("clipboardPermission", "granted");
     return;
   }
 
@@ -303,7 +316,7 @@ function requestClipboardPermission() {
   });
 }
 
-window.onload = function () {
+window.onload = async function () {
   document.getElementById('inputText').focus();
   const savedMode = localStorage.getItem('mode');
   if (savedMode === 'light') {
@@ -313,7 +326,8 @@ window.onload = function () {
   if (saved) {
     document.getElementById('resumeBtn').style.display = 'inline-block';
   }
-  if (localStorage.getItem("clipboardPermission") !== "granted") {
+  const clipboardPermission = localStorage.getItem("clipboardPermission");
+  if (clipboardPermission !== "granted" && !(await checkClipboardPermission())) {
     document.getElementById("requestClipboardBtn").style.display = "block";
   }
   document.getElementById("requestClipboardBtn").addEventListener("click", requestClipboardPermission);
