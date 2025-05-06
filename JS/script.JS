@@ -1,4 +1,3 @@
-
 let lines = [];
 let index = 0;
 const isArabic = document.documentElement.lang === "ar" || document.body.dir === "rtl";
