@@ -1,6 +1,7 @@
 
 let lines = [];
 let index = 0;
+const isArabic = document.documentElement.lang === "ar" || document.body.dir === "rtl";
 
 function confirmInput() {
   const text = document.getElementById('inputText').value;
@@ -14,24 +15,39 @@ function confirmInput() {
     document.getElementById('copyAllBtn').style.display = 'inline-block';
     updateStatus();
   } else {
-    alert('من فضلك أدخل بعض النصوص أولاً.');
+    Swal.fire({
+      title: 'خطأ',
+      text: 'من فضلك أدخل بعض النصوص أولاً.',
+      icon: 'warning',
+      confirmButtonColor: '#3085d6'
+    });
   }
 }
 
 function copyNext() {
-  while (index < lines.length && !lines[index].trim()) index++; // Skip empty lines
+  while (index < lines.length && !lines[index].trim()) index++;
   if (index < lines.length) {
-    navigator.clipboard.writeText(lines[index]).then(() => {
+    copyToClipboard(lines[index]).then(() => {
       flashElement('genBtn');
       index++;
       localStorage.setItem('savedIndex', index);
       updateStatus();
     }).catch((err) => {
-      alert("فشل النسخ! يرجى منح إذن الوصول إلى الحافظة.");
+      Swal.fire({
+        title: 'خطأ',
+        text: 'فشل النسخ! يرجى السماح بالوصول إلى الحافظة.',
+        icon: 'error',
+        confirmButtonColor: '#3085d6'
+      });
       console.error("Clipboard error:", err);
     });
   } else {
-    alert('انتهت القائمة.');
+    Swal.fire({
+      title: 'انتهت القائمة',
+      text: 'لا توجد سطور أخرى لنسخها.',
+      icon: 'info',
+      confirmButtonColor: '#3085d6'
+    });
   }
 }
 
@@ -45,29 +61,62 @@ function copyPrev() {
     localStorage.setItem('savedIndex', index);
     copyNext();
   } else {
-    alert('لا يوجد سطر سابق.');
+    Swal.fire({
+      title: 'لا يوجد سابق',
+      text: 'لا يوجد سطر سابق لنسخه.',
+      icon: 'info',
+      confirmButtonColor: '#3085d6'
+    });
   }
 }
 
 function copyByNumber() {
-  const userInput = prompt(`أدخل رقم السطر (من 1 إلى ${lines.length}):`);
-  const lineNum = parseInt(userInput);
-  if (!isNaN(lineNum) && lineNum >= 1 && lineNum <= lines.length) {
-    index = lineNum - 1;
-    localStorage.setItem('savedIndex', index);
-    copyNext();
-  } else {
-    alert("رقم غير صالح.");
-  }
+  Swal.fire({
+    title: 'نسخ حسب الرقم',
+    input: 'number',
+    inputLabel: `أدخل رقم السطر (من 1 إلى ${lines.length})`,
+    inputAttributes: { min: 1, max: lines.length },
+    showCancelButton: true,
+    confirmButtonText: 'نسخ',
+    cancelButtonText: 'إلغاء',
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33'
+  }).then((result) => {
+    if (result.isConfirmed && result.value) {
+      const lineNum = parseInt(result.value);
+      if (!isNaN(lineNum) && lineNum >= 1 && lineNum <= lines.length) {
+        index = lineNum - 1;
+        localStorage.setItem('savedIndex', index);
+        copyNext();
+      } else {
+        Swal.fire({
+          title: 'خطأ',
+          text: 'رقم غير صالح.',
+          icon: 'error',
+          confirmButtonColor: '#3085d6'
+        });
+      }
+    }
+  });
 }
 
 function copyAll() {
   if (lines.length > 0) {
-    navigator.clipboard.writeText(lines.join('\n')).then(() => {
+    copyToClipboard(lines.join('\n')).then(() => {
       flashElement('copyAllBtn');
-      alert('تم نسخ جميع السطور بنجاح.');
+      Swal.fire({
+        title: 'تم النسخ',
+        text: 'تم نسخ جميع السطور بنجاح.',
+        icon: 'success',
+        confirmButtonColor: '#3085d6'
+      });
     }).catch(() => {
-      alert('حدث خطأ في نسخ الكل.');
+      Swal.fire({
+        title: 'خطأ',
+        text: 'حدث خطأ أثناء نسخ الكل.',
+        icon: 'error',
+        confirmButtonColor: '#3085d6'
+      });
     });
   }
 }
@@ -111,7 +160,12 @@ function resumeSession() {
     document.getElementById('resumeBtn').style.display = 'none';
     updateStatus();
   } else {
-    alert("لا يوجد بيانات محفوظة.");
+    Swal.fire({
+      title: 'لا توجد بيانات',
+      text: 'لا يوجد بيانات محفوظة للاستئناف.',
+      icon: 'info',
+      confirmButtonColor: '#3085d6'
+    });
   }
 }
 
@@ -121,20 +175,148 @@ function flashElement(id) {
   setTimeout(() => el.classList.remove('flash-effect'), 300);
 }
 
+async function copyToClipboard(text) {
+  if (navigator.clipboard) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return;
+    } catch (err) {
+      console.warn("Clipboard API failed:", err);
+    }
+  }
+  if (typeof ClipboardJS !== "undefined") {
+    return new Promise((resolve, reject) => {
+      const tempBtn = document.createElement("button");
+      tempBtn.className = "clipboard-btn";
+      document.body.appendChild(tempBtn);
+      const clipboard = new ClipboardJS(tempBtn, { text: () => text });
+      clipboard.on('success', () => {
+        clipboard.destroy();
+        tempBtn.remove();
+        resolve();
+      });
+      clipboard.on('error', (e) => {
+        clipboard.destroy();
+        tempBtn.remove();
+        reject(new Error("Clipboard.js failed: " + e.action));
+      });
+      tempBtn.click();
+    });
+  }
+  throw new Error("لا يدعم المتصفح خاصية النسخ.");
+}
+
+function requestClipboardPermission() {
+  const clipboardPermission = localStorage.getItem("clipboardPermission");
+  if (clipboardPermission === "granted") {
+    document.getElementById("requestClipboardBtn").style.display = "none";
+    return;
+  }
+
+  Swal.fire({
+    title: isArabic ? 'السماح بالوصول إلى الحافظة؟' : 'Allow clipboard access?',
+    text: isArabic ? "هذا ضروري لتمكين خاصية النسخ التلقائي." : "This is needed for clipboard copy functionality.",
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: isArabic ? 'نعم، اسمح بذلك' : 'Yes, allow it',
+    cancelButtonText: isArabic ? 'لا' : 'No',
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    didOpen: () => {
+      if (isArabic) {
+        const swal = document.querySelector('.swal2-popup');
+        if (swal) swal.setAttribute("dir", "rtl");
+      }
+    }
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      try {
+        let success = false;
+        if (navigator.clipboard) {
+          await navigator.clipboard.writeText(" ");
+          success = true;
+        } else if (typeof ClipboardJS !== "undefined") {
+          await new Promise((resolve, reject) => {
+            const tempBtn = document.createElement("button");
+            tempBtn.className = "clipboard-btn";
+            document.body.appendChild(tempBtn);
+            const clipboard = new ClipboardJS(tempBtn, { text: () => " " });
+            clipboard.on('success', () => {
+              clipboard.destroy();
+              tempBtn.remove();
+              resolve();
+            });
+            clipboard.on('error', (e) => {
+              clipboard.destroy();
+              tempBtn.remove();
+              reject(new Error("Clipboard.js failed"));
+            });
+            tempBtn.click();
+          });
+          success = true;
+        }
+        if (success) {
+          Swal.fire({
+            title: isArabic ? 'تم!' : 'Done!',
+            text: isArabic ? 'تم منح إذن الوصول بنجاح.' : 'Clipboard access granted.',
+            icon: 'success',
+            confirmButtonColor: '#3085d6'
+          });
+          localStorage.setItem("clipboardPermission", "granted");
+          document.getElementById("requestClipboardBtn").style.display = "none";
+        } else {
+          throw new Error("فشل الوصول إلى الحافظة.");
+        }
+      } catch (err) {
+        Swal.fire({
+          title: isArabic ? 'خطأ!' : 'Error!',
+          text: (isArabic ? 'فشل الوصول إلى الحافظة: ' : 'Failed to access clipboard: ') + err.message,
+          icon: 'error',
+          showCancelButton: true,
+          confirmButtonText: isArabic ? 'حاول مرة أخرى' : 'Try again',
+          cancelButtonText: isArabic ? 'إلغاء' : 'Cancel',
+          confirmButtonColor: '#3085d6',
+          cancelButtonColor: '#d33',
+          didOpen: () => {
+            if (isArabic) {
+              const swal = document.querySelector('.swal2-popup');
+              if (swal) swal.setAttribute("dir", "rtl");
+            }
+          }
+        }).then((retryResult) => {
+          if (retryResult.isConfirmed) {
+            requestClipboardPermission();
+          } else {
+            localStorage.setItem("clipboardPermission", "denied");
+            Swal.fire({
+              title: isArabic ? 'ملاحظة' : 'Note',
+              text: isArabic ? 'يمكنك تفعيل الوصول للحافظة من إعدادات المتصفح.' : 'You can enable clipboard access from browser settings.',
+              icon: 'info',
+              confirmButtonColor: '#3085d6'
+            });
+          }
+        });
+      }
+    } else {
+      localStorage.setItem("clipboardPermission", "denied");
+    }
+  });
+}
+
 window.onload = function () {
   document.getElementById('inputText').focus();
-
   const savedMode = localStorage.getItem('mode');
   if (savedMode === 'light') {
     document.body.classList.add('light-mode');
   }
-
   const saved = localStorage.getItem('savedLines');
   if (saved) {
     document.getElementById('resumeBtn').style.display = 'inline-block';
   }
-
-  // Keyboard shortcuts
+  if (localStorage.getItem("clipboardPermission") !== "granted") {
+    document.getElementById("requestClipboardBtn").style.display = "block";
+  }
+  document.getElementById("requestClipboardBtn").addEventListener("click", requestClipboardPermission);
   document.addEventListener('keydown', (e) => {
     if (e.ctrlKey && e.key === 'Enter') {
       if (e.shiftKey) copyPrev();
@@ -143,162 +325,3 @@ window.onload = function () {
     if (e.ctrlKey && e.altKey && e.key === 'c') copyAll();
   });
 };
-
-
-
-document.addEventListener("DOMContentLoaded", () => {
-  const isArabic = document.documentElement.lang === "ar" || document.body.dir === "rtl";
-  const clipboardPermission = localStorage.getItem("clipboardPermission");
-
-  // تخطي إذا كان الإذن ممنوح بالفعل
-  if (clipboardPermission === "granted") return;
-
-  // دالة لمحاولة الكتابة في الحافظة باستخدام Clipboard API
-  async function tryClipboardWrite() {
-    if (!navigator.clipboard) {
-      return { success: false, error: "Clipboard API غير مدعوم" };
-    }
-    try {
-      await navigator.clipboard.writeText(" ");
-      return { success: true };
-    } catch (err) {
-      return { success: false, error: err.message };
-    }
-  }
-
-  // دالة لمحاولة الكتابة باستخدام clipboard.js كبديل
-  function tryClipboardJsWrite() {
-    return new Promise((resolve) => {
-      if (typeof ClipboardJS === "undefined") {
-        resolve({ success: false, error: "مكتبة Clipboard.js غير متوفرة" });
-        return;
-      }
-      const clipboard = new ClipboardJS('.clipboard-btn', {
-        text: () => " ",
-      });
-      clipboard.on('success', () => {
-        clipboard.destroy();
-        resolve({ success: true });
-      });
-      clipboard.on('error', (e) => {
-        clipboard.destroy();
-        resolve({ success: false, error: e.action + " فشل" });
-      });
-      document.querySelector('.clipboard-btn').click();
-    });
-  }
-
-  // دالة للتحقق من حالة إذن الحافظة
-  async function checkClipboardPermission() {
-    if (navigator.permissions && navigator.permissions.query) {
-      try {
-        const permissionStatus = await navigator.permissions.query({ name: 'clipboard-write' });
-        return permissionStatus.state; // 'granted', 'prompt', أو 'denied'
-      } catch (err) {
-        console.warn("واجهة Permissions غير مدعومة أو فشلت:", err);
-        return 'unknown';
-      }
-    }
-    return 'unknown';
-  }
-
-  // دالة لعرض نافذة طلب الإذن
-  function showPermissionPrompt() {
-    Swal.fire({
-      title: isArabic ? 'السماح بالوصول إلى الحافظة؟' : 'Allow clipboard access?',
-      text: isArabic ? "هذا ضروري لتمكين خاصية النسخ التلقائي." : "This is needed for clipboard copy functionality.",
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonText: isArabic ? 'نعم، اسمح بذلك' : 'Yes, allow it',
-      cancelButtonText: isArabic ? 'لا' : 'No',
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
-      didOpen: () => {
-        if (isArabic) {
-          const swal = document.querySelector('.swal2-popup');
-          if (swal) swal.setAttribute("dir", "rtl");
-        }
-      }
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        const permissionState = await checkClipboardPermission();
-
-        if (permissionState === 'granted' || permissionState === 'prompt' || permissionState === 'unknown') {
-          let writeResult = await tryClipboardWrite();
-
-          // إذا فشل Clipboard API، جرب clipboard.js
-          if (!writeResult.success && typeof ClipboardJS !== "undefined") {
-            writeResult = await tryClipboardJsWrite();
-          }
-
-          if (writeResult.success) {
-            Swal.fire(
-              isArabic ? 'تم!' : 'Done!',
-              isArabic ? 'تم منح إذن الوصول بنجاح.' : 'Clipboard access granted.',
-              'success'
-            );
-            localStorage.setItem("clipboardPermission", "granted");
-          } else {
-            Swal.fire({
-              title: isArabic ? 'خطأ!' : 'Error!',
-              text: (isArabic ? 'فشل الوصول إلى الحافظة: ' : 'Failed to access clipboard: ') + writeResult.error,
-              icon: 'error',
-              showCancelButton: true,
-              confirmButtonText: isArabic ? 'حاول مرة أخرى' : 'Try again',
-              cancelButtonText: isArabic ? 'إلغاء' : 'Cancel',
-              confirmButtonColor: '#3085d6',
-              cancelButtonColor: '#d33',
-              didOpen: () => {
-                if (isArabic) {
-                  const swal = document.querySelector('.swal2-popup');
-                  if (swal) swal.setAttribute("dir", "rtl");
-                }
-              }
-            }).then((retryResult) => {
-              if (retryResult.isConfirmed) {
-                showPermissionPrompt(); // إعادة المحاولة
-              } else {
-                localStorage.setItem("clipboardPermission", "denied");
-                Swal.fire(
-                  isArabic ? 'ملاحظة' : 'Note',
-                  isArabic ? 'يمكنك تفعيل الوصول للحافظة من إعدادات المتصفح.' : 'You can enable clipboard access from your browser settings.',
-                  'info'
-                );
-              }
-            });
-          }
-        } else {
-          Swal.fire(
-            isArabic ? 'تم الرفض!' : 'Denied!',
-            isArabic ? 'تم رفض إذن الوصول إلى الحافظة. يمكنك تفعيل الإذن من إعدادات المتصفح.' : 'Clipboard access permission was denied. You can enable it from browser settings.',
-            'error'
-          );
-          localStorage.setItem("clipboardPermission", "denied");
-        }
-      } else {
-        localStorage.setItem("clipboardPermission", "denied");
-      }
-    });
-  }
-
-  // إضافة زر مخفي لـ clipboard.js
-  const btn = document.createElement("button");
-  btn.className = "clipboard-btn";
-  btn.style.display = "none";
-  document.body.appendChild(btn);
-
-  // بدء العملية إذا لم يكن الإذن مرفوضًا
-  if (clipboardPermission !== "denied") {
-    // تحقق من دعم Clipboard API
-    if (!navigator.clipboard && typeof ClipboardJS === "undefined") {
-      Swal.fire(
-        isArabic ? 'غير مدعوم!' : 'Not supported!',
-        isArabic ? 'متصفحك لا يدعم خاصية النسخ للحافظة.' : 'Your browser does not support clipboard functionality.',
-        'warning'
-      );
-      localStorage.setItem("clipboardPermission", "denied");
-    } else {
-      showPermissionPrompt();
-    }
-  }
-});
