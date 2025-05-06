@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ar">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Copy Your Text Fast">
+  <link rel="stylesheet" href="CSS/style.css">
+  <title>Fast Copy</title>
+</head>
+
+<body>
+  <div class="container">
+    <h2>⚡ نسخ سريع سطر بسطر</h2>
+    <textarea id="inputText" placeholder="أدخل الأرقام، كل رقم في سطر"></textarea>
+    <div class="buttons">
+      <button id="modeToggle" onclick="toggleMode()">🌓 تبديل الوضع</button>
+      <button id="resetBtn" onclick="resetAll()">🔄 إعادة التشغيل</button>
+      <button id="copyAllBtn" onclick="copyAll()">📑 نسخ الكل</button>
+      <button onclick="copyByNumber()">📌 نسخ حسب الرقم</button>
+      <button id="resumeBtn" onclick="resumeSession()">🔖 استئناف</button>
+      <button onclick="confirmInput()">✅ تأكيد</button>
+      <div class="button-group">
+        <button id="genBtn" onclick="copyNext()">📋 التالي</button>
+        <button id="prevBtn" onclick="copyPrev()">↩️ السابق</button>
+      </div>
+    </div>
+    <div id="progressBar">
+      <div id="progressFill"></div>
+    </div>
+    <div id="status"></div>
+  </div>
+</body>
+<script src="JS/script.JS"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+</html>
