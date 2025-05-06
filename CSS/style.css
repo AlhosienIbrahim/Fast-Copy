@@ -108,7 +108,7 @@ button:active {
   border-radius: 8px;
   cursor: pointer;
   transition: background-color 0.3s ease;
-  display: block;
+  display: none;
   text-align: center;
 }
 
