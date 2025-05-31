@@ -89,7 +89,13 @@ const Utils = {
    * Format message with placeholders
    */
   formatMessage(template, params = {}) {
-    return template.replace(/\{\{(\w+)\}\}/g, (match, key) => params[key] || match);
+    return template.replace(/\{\{(\w+)\}\}/g, (match, key) => {
+      // التحقق من وجود الخاصية وليس فقط القيمة truthy
+      if (params.hasOwnProperty(key)) {
+        return String(params[key]); // تحويل القيمة إلى سلسلة نصية
+      }
+      return match;
+    });
   }
 };
 
@@ -381,13 +387,16 @@ class LineManager {
    */
   updateStatus() {
     if (this.lines.length === 0) return;
+    const currentCopied = this.index;
+    const totalLines = this.lines.length;
 
-    // عرض عدد السطور التي تم نسخها (index) من إجمالي السطور
-    const percent = Math.round((this.index / this.lines.length) * 100);
+    const percent = Math.round((currentCopied / totalLines) * 100);
+
     const message = Utils.formatMessage(this.messages.COPIED_STATUS, {
-      current: this.index, // هذا يُظهر عدد السطور المنسوخة، وليس السطر التالي
-      total: this.lines.length
+      current: currentCopied,
+      total: totalLines
     });
+
 
     if (this.elements.progressFill) {
       this.elements.progressFill.style.width = `${percent}%`;
