@@ -683,13 +683,20 @@ class StorageManager {
   /**
    * Save current index
    */
-  saveIndex(index) {
+saveIndex(index) {
     try {
-      localStorage.setItem(CONFIG.STORAGE_KEYS.INDEX, index.toString());
+        const savedData = localStorage.getItem(CONFIG.STORAGE_KEYS.LINES);
+        if (savedData) {
+            const sessionData = JSON.parse(savedData);
+            if (sessionData && typeof sessionData === 'object') {
+                sessionData.index = index;
+                localStorage.setItem(CONFIG.STORAGE_KEYS.LINES, JSON.stringify(sessionData));
+            }
+        }
     } catch (error) {
-      console.error("Failed to save index:", error);
+        console.error("Failed to save index:", error);
     }
-  }
+}
 
   /**
    * Save theme mode
@@ -705,25 +712,29 @@ class StorageManager {
   /**
    * Load session data with validation
    */
-  loadSession() {
+loadSession() {
     try {
-      const savedData = localStorage.getItem(CONFIG.STORAGE_KEYS.LINES);
-
-      if (!savedData) {
+        const savedData = localStorage.getItem(CONFIG.STORAGE_KEYS.LINES);
+        if (!savedData) {
+            return { lines: null, index: 0 };
+        }
+        const sessionData = JSON.parse(savedData);
+        if (Array.isArray(sessionData)) {
+            // تنسيق قديم: تحويل إلى التنسيق الجديد
+            const savedIndex = localStorage.getItem(CONFIG.STORAGE_KEYS.INDEX);
+            return { lines: sessionData, index: savedIndex ? parseInt(savedIndex) : 0 };
+        } else if (sessionData && sessionData.lines) {
+            return {
+                lines: sessionData.lines,
+                index: sessionData.index || 0
+            };
+        }
         return { lines: null, index: 0 };
-      }
-
-      const sessionData = Utils.safeJSONParse(savedData);
-
-      // Handle legacy format
-      if (Array.isArray(sessionData)) {
-        const savedIndex = localStorage.getItem(CONFIG.STORAGE_KEYS.INDEX);
-        return {
-          lines: sessionData,
-          index: savedIndex ? parseInt(savedIndex) : 0
-        };
-      }
-
+    } catch (error) {
+        console.error("Failed to load session:", error);
+        return { lines: null, index: 0 };
+    }
+}
       // Handle new format
       if (sessionData && sessionData.lines) {
         return {
