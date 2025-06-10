@@ -142,21 +142,29 @@ class LineManager {
             document.documentElement.dir === "rtl";
     }
 
-    /**
-     * Initialize the application
-     */
-    init() {
-        try {
-            this.elements.inputText?.focus();
-            this.loadSavedMode();
-            this.loadSavedSession();
-            this.setupEventListeners();
-            this.clipboard.requestPermissionIfNeeded();
-        } catch (error) {
-            console.error('Initialization error:', error);
-            this.ui.showError('حدث خطأ أثناء تهيئة التطبيق.');
-        }
-    }
+/**
+ * تهيئة التطبيق عند التحميل
+ */
+init() {
+  try {
+    // التركيز على حقل الإدخال
+    this.elements.inputText?.focus();
+    
+    // تحميل الإعدادات والجلسة
+    this.loadSavedMode();
+    this.loadSavedSession(); // تحميل الجلسة المحفوظة
+    
+    // إعداد مستمعي الأحداث
+    this.setupEventListeners();
+    
+    // طلب إذن الحافظة إذا لزم الأمر
+    this.clipboard.requestPermissionIfNeeded();
+    
+  } catch (error) {
+    console.error('Initialization error:', error);
+    this.ui.showError('حدث خطأ أثناء تهيئة التطبيق.');
+  }
+}
 
     /**
      * Setup event listeners with improved keyboard handling
@@ -363,22 +371,28 @@ class LineManager {
         }
     }
 
-    /**
-     * Reset application state
-     */
-    resetAll() {
-        // Clear UI
-        if (this.elements.inputText) this.elements.inputText.value = '';
-        if (this.elements.status) this.elements.status.textContent = '';
-        if (this.elements.progressFill) this.elements.progressFill.style.width = '0%';
+/**
+ * إعادة تعيين التطبيق بالكامل
+ */
+resetAll() {
+  // مسح واجهة المستخدم
+  if (this.elements.inputText) this.elements.inputText.value = '';
+  if (this.elements.status) this.elements.status.textContent = '';
+  if (this.elements.progressFill) {
+    this.elements.progressFill.style.width = '0%';
+  }
 
-        this.ui.hideButtons();
-
-        // Reset state
-        this.lines = [];
-        this.index = 0;
-        this.storage.clearSession();
-    }
+  // إخفاء الأزرار
+  this.ui.hideButtons();
+  
+  // إعادة تعيين الحالة
+  this.lines = [];
+  this.index = 0;
+  this.storage.clearSession();
+  
+  // التحقق من وجود جلسة محفوظة لعرض زر الاستئناف
+  this.loadSavedSession();
+}
 
     /**
      * Update status with progress - FIXED: Shows correct current line number
@@ -417,30 +431,36 @@ class LineManager {
     /**
      * Resume saved session
      */
-    resumeSession() {
-        const sessionData = this.storage.loadSession();
+/**
+ * استئناف الجلسة المحفوظة
+ */
+resumeSession() {
+  const sessionData = this.storage.loadSession();
 
-        if (!sessionData.lines || sessionData.lines.length === 0) {
-            this.ui.showInfo(this.messages.NO_DATA, this.messages.NO_SAVED_DATA);
-            return;
-        }
+  // التحقق من وجود بيانات
+  if (!sessionData.lines || sessionData.lines.length === 0) {
+    this.ui.showInfo(this.messages.NO_DATA, this.messages.NO_SAVED_DATA);
+    return;
+  }
 
-        this.lines = sessionData.lines;
-        this.index = sessionData.index; // استخدم المؤشر المحفوظ مباشرة
+  // تعيين البيانات والمؤشر
+  this.lines = sessionData.lines;
+  this.index = sessionData.index || 0;
 
-        if (this.elements.inputText) {
-            this.elements.inputText.value = this.lines.join('\n');
-        }
+  // تعبئة حقل الإدخال
+  if (this.elements.inputText) {
+    this.elements.inputText.value = this.lines.join('\n');
+  }
 
-        this.ui.showButtons();
+  // عرض الأزرار وإخفاء زر الاستئناف
+  this.ui.showButtons();
+  if (this.elements.resumeBtn) {
+    this.elements.resumeBtn.style.display = 'none';
+  }
 
-        if (this.elements.resumeBtn) {
-            this.elements.resumeBtn.style.display = 'none';
-        }
-
-        this.updateStatus();
-    }
-
+  // تحديث الحالة
+  this.updateStatus();
+}
     /**
      * Load saved theme mode
      */
@@ -454,12 +474,48 @@ class LineManager {
     /**
      * Load saved session and show resume button if available
      */
-    loadSavedSession() {
-        const sessionData = this.storage.loadSession();
-        if (sessionData.lines && sessionData.lines.length > 0 && this.elements.resumeBtn) {
-            this.elements.resumeBtn.style.display = 'inline-block';
-        }
+/**
+ * تحميل الجلسة المحفوظة وعرض زر الاستئناف إذا وجدت بيانات
+ */
+/**
+ * إخفاء جميع الأزرار ما عدا زر الاستئناف
+ */
+hideButtonsExceptResume() {
+  const buttonsToHide = ['genBtn', 'prevBtn', 'copyAllBtn'];
+  
+  // إخفاء الأزرار المحددة
+  buttonsToHide.forEach(btnId => {
+    const btn = this.elements[btnId];
+    if (btn) btn.style.display = 'none';
+  });
+  
+  // التأكد من ظهور زر الاستئناف
+  if (this.elements.resumeBtn) {
+    this.elements.resumeBtn.style.display = 'inline-block';
+  }
+  
+  // إظهار حقل الإدخال إذا كان مخفياً
+  if (this.elements.inputText) {
+    this.elements.inputText.style.display = 'block';
+  }
+}
+loadSavedSession() {
+  const sessionData = this.storage.loadSession();
+  
+  // التحقق من وجود بيانات وعرض زر الاستئناف
+  if (sessionData.lines && sessionData.lines.length > 0) {
+    if (this.elements.resumeBtn) {
+      this.elements.resumeBtn.style.display = 'inline-block';
     }
+    // إخفاء الأزرار الأخرى مؤقتاً
+    this.ui.hideButtonsExceptResume();
+  } else {
+    // إخفاء زر الاستئناف إذا لا توجد بيانات
+    if (this.elements.resumeBtn) {
+      this.elements.resumeBtn.style.display = 'none';
+    }
+  }
+}
 }
 
 // Enhanced Clipboard management
@@ -709,38 +765,41 @@ class StorageManager {
         }
     }
 
-    /**
-     * Load session data with validation
-     */
-    loadSession() {
-        try {
-            const savedData = localStorage.getItem(CONFIG.STORAGE_KEYS.LINES);
-            if (!savedData) return { lines: null, index: 0 };
+  /**
+ * تحميل بيانات الجلسة من التخزين المحلي
+ */
+loadSession() {
+  try {
+    const savedData = localStorage.getItem(CONFIG.STORAGE_KEYS.LINES);
+    
+    // إذا لا توجد بيانات محفوظة
+    if (!savedData) return { lines: null, index: 0 };
 
-            const sessionData = Utils.safeJSONParse(savedData);
+    const sessionData = Utils.safeJSONParse(savedData);
 
-            // التعامل مع التنسيق الحديث (كائن)
-            if (sessionData && sessionData.lines) {
-                return {
-                    lines: sessionData.lines,
-                    index: sessionData.index || 0 // استخدم 0 إذا لم يوجد index
-                };
-            }
-
-            // التعامل مع التنسيق القديم (مصفوفة فقط)
-            if (Array.isArray(sessionData)) {
-                return {
-                    lines: sessionData,
-                    index: parseInt(localStorage.getItem(CONFIG.STORAGE_KEYS.INDEX)) || 0
-                };
-            }
-
-            return { lines: null, index: 0 };
-        } catch (error) {
-            return { lines: null, index: 0 };
-        }
+    // التعامل مع التنسيق الحديث (كائن)
+    if (sessionData && sessionData.lines) {
+      return {
+        lines: sessionData.lines,
+        index: sessionData.index || 0
+      };
     }
 
+    // التعامل مع التنسيق القديم (مصفوفة فقط)
+    if (Array.isArray(sessionData)) {
+      return {
+        lines: sessionData,
+        index: parseInt(localStorage.getItem(CONFIG.STORAGE_KEYS.INDEX)) || 0
+      };
+    }
+
+    return { lines: null, index: 0 };
+    
+  } catch (error) {
+    console.error("Error loading session:", error);
+    return { lines: null, index: 0 };
+  }
+}
     /**
      * Get saved theme mode
      */
