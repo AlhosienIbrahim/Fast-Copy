@@ -8,26 +8,24 @@
   <link rel="stylesheet" href="CSS/style.css" />
 </head>
 <body>
-  <div class="container">
-    <h2>⚡ نسخ سريع سطر بسطر</h2>
-    <button id="requestClipboardBtn">📋 السماح بالوصول للحافظة</button>
-    <textarea id="inputText" placeholder="أدخل الأرقام، كل رقم في سطر"></textarea>
-    <div class="buttons">
-      <button id="modeToggle" onclick="toggleMode()">🌓 تبديل الوضع</button>
-      <button id="resetBtn" onclick="resetAll()">🔄 إعادة التشغيل</button>
-      <button id="copyAllBtn" onclick="copyAll()">📑 نسخ الكل</button>
-      <button onclick="copyByNumber()">📌 نسخ حسب الرقم</button>
-      <button id="resumeBtn" onclick="resumeSession()">🔖 استئناف</button>
-      <button onclick="confirmInput()">✅ تأكيد</button>
-      <div class="button-group">
-        <button id="genBtn" onclick="copyNext()">📋 التالي</button>
-        <button id="prevBtn" onclick="copyPrev()">↩️ السابق</button>
-      </div>
+  <div class="w-full max-w-2xl">
+    <h1 class="text-2xl font-bold mb-4 text-center">📋 السماح بالوصول للحافظة</h1>
+    <textarea id="inputText" class="p-2 border rounded bg-gray-800 text-white light-mode:bg-white light-mode:text-black"></textarea>
+    <div class="mt-4 flex flex-wrap gap-2 justify-center">
+      <button id="toggleModeBtn" onclick="toggleMode()" class="p-2 bg-blue-600 rounded hover:bg-blue-700">🌓 تبديل الوضع</button>
+      <button id="resetBtn" onclick="resetAll()" class="p-2 bg-red-600 rounded hover:bg-red-700">🔄 إعادة التشغيل</button>
+      <button id="copyAllBtn" onclick="copyAll()" class="p-2 bg-green-600 rounded hover:bg-green-700 hidden">📑 نسخ الكل</button>
+      <button id="copyByNumberBtn" onclick="copyByNumber()" class="p-2 bg-purple-600 rounded hover:bg-purple-700">📌 نسخ حسب الرقم</button>
+      <button id="resumeBtn" onclick="resumeSession()" class="p-2 bg-yellow-600 rounded hover:bg-yellow-700 hidden">🔖 استئناف</button>
+      <button id="confirmBtn" onclick="confirmInput()" class="p-2 bg-indigo-600 rounded hover:bg-indigo-700">✅ تأكيد</button>
+      <button id="genBtn" onclick="copyNext()" class="p-2 bg-blue-600 rounded hover:bg-blue-700 hidden">📋 التالي</button>
+      <button id="prevBtn" onclick="copyPrev()" class="p-2 bg-blue-600 rounded hover:bg-blue-700 hidden">↩️ السابق</button>
+      <button id="requestClipboardBtn" class="p-2 bg-gray-600 rounded hover:bg-gray-700 hidden">📋 طلب إذن الحافظة</button>
     </div>
-    <div id="progressBar">
-      <div id="progressFill"></div>
+    <div class="mt-4">
+      <div id="progressFill" style="width: 0%;"></div>
+      <p id="status" class="text-center mt-2"></p>
     </div>
-    <div id="status"></div>
   </div>
   <!-- SweetAlert2 (local) -->
   <script src="JS/sweetalert2.all.min.js"></script>
