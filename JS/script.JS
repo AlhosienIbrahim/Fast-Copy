@@ -243,7 +243,9 @@ class LineManager {
     this.index = 0;
     this.storage.saveSession(this.lines, this.index);
     this.ui.showButtons();
+    this.skipEmptyLines();
     this.updateStatus();
+    this.copyNext();
   }
 
   /**
@@ -265,7 +267,9 @@ class LineManager {
       this.ui.flashElement('genBtn');
       this.index++;
       this.storage.saveIndex(this.index);
-      this.updateStatus();
+      this.skipEmptyLines();
+    this.updateStatus();
+    this.copyNext();
 
     } catch (error) {
       this.handleCopyError(error);
@@ -428,7 +432,7 @@ class LineManager {
     }
 
     this.lines = sessionData.lines;
-    this.index = (!isNaN(sessionData.index) ? sessionData.index : 0);
+    this.index = Number.isInteger(sessionData.index) ? sessionData.index : 0;
 
     if (this.elements.inputText) {
       this.elements.inputText.value = this.lines.join('\n');
@@ -440,7 +444,9 @@ class LineManager {
       this.elements.resumeBtn.style.display = 'none';
     }
 
+    this.skipEmptyLines();
     this.updateStatus();
+    this.copyNext();
   }
 
   /**
@@ -728,7 +734,7 @@ class StorageManager {
       if (sessionData && sessionData.lines) {
         return {
           lines: sessionData.lines,
-          index: Number.isInteger(sessionData.index) ? sessionData.index : 0
+          index: sessionData.index || 0
         };
       }
 
