@@ -428,7 +428,7 @@ class LineManager {
     }
 
     this.lines = sessionData.lines;
-    this.index = sessionData.index || 0;
+    this.index = (!isNaN(sessionData.index) ? sessionData.index : 0);
 
     if (this.elements.inputText) {
       this.elements.inputText.value = this.lines.join('\n');
@@ -728,7 +728,7 @@ class StorageManager {
       if (sessionData && sessionData.lines) {
         return {
           lines: sessionData.lines,
-          index: sessionData.index || 0
+          index: Number.isInteger(sessionData.index) ? sessionData.index : 0
         };
       }
 
