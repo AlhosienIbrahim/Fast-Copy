@@ -1,124 +1,36 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Copy Your Text Fast" />
   <title>Fast Copy</title>
-  
-  <!-- Bootstrap RTL CSS -->
-  <link href="CSS/bootstrap.rtl.min.css" rel="stylesheet">
-  
-  <!-- Custom CSS -->
   <link rel="stylesheet" href="CSS/style.css" />
+  <link rel="stylesheet" href="CSS/bootstrap.min.css" />
 </head>
 <body>
-  <div class="container">
-    <div class="row justify-content-center">
-      <div class="col-12 col-md-10 col-lg-8 col-xl-7">
-        <div class="main-card p-4 p-md-5">
-          
-          <!-- Header -->
-          <div class="text-center mb-4">
-            <div class="title-icon">📋</div>
-            <h1 class="fw-bold mb-2">Fast Copy</h1>
-            <p class="text-muted mb-0">نسخ النصوص بسرعة وسهولة</p>
-          </div>
-
-          <!-- Textarea -->
-          <div class="mb-4">
-            <textarea 
-              id="inputText" 
-              class="form-control" 
-              placeholder="أدخل النصوص هنا... كل سطر سيُنسخ بشكل منفصل"
-              rows="8"
-            ></textarea>
-          </div>
-
-          <!-- Clipboard Permission Button -->
-          <div id="requestClipboardBtn" class="alert alert-info d-none mb-4" role="alert">
-            <div class="d-flex align-items-center justify-content-between">
-              <span>📋 يُرجى السماح بالوصول للحافظة</span>
-              <button class="btn btn-sm btn-primary" onclick="window.clipboard?.requestPermission()">
-                السماح الآن
-              </button>
-            </div>
-          </div>
-
-          <!-- Buttons -->
-          <div class="row g-2 mb-4">
-            <!-- Row 1: Main actions -->
-            <div class="col-6 col-sm-4">
-              <button id="confirmBtn" onclick="confirmInput()" class="btn btn-primary w-100">
-                ✅ تأكيد
-              </button>
-            </div>
-            <div class="col-6 col-sm-4">
-              <button id="genBtn" onclick="copyNext()" class="btn btn-success w-100 d-none">
-                ⏭️ التالي
-              </button>
-            </div>
-            <div class="col-6 col-sm-4">
-              <button id="prevBtn" onclick="copyPrev()" class="btn btn-warning w-100 d-none">
-                ⏮️ السابق
-              </button>
-            </div>
-
-            <!-- Row 2: Additional actions -->
-            <div class="col-6 col-sm-4">
-              <button id="copyAllBtn" onclick="copyAll()" class="btn btn-info w-100 d-none">
-                📑 نسخ الكل
-              </button>
-            </div>
-            <div class="col-6 col-sm-4">
-              <button id="copyByNumberBtn" onclick="copyByNumber()" class="btn btn-secondary w-100">
-                🔢 نسخ برقم
-              </button>
-            </div>
-            <div class="col-6 col-sm-4">
-              <button id="resetBtn" onclick="resetAll()" class="btn btn-danger w-100">
-                🔄 إعادة
-              </button>
-            </div>
-
-            <!-- Row 3: Theme toggle (full width on mobile) -->
-            <div class="col-12 col-sm-4 offset-sm-4">
-              <button id="toggleModeBtn" onclick="toggleMode()" class="btn btn-dark w-100">
-                🌓 تبديل الوضع
-              </button>
-            </div>
-          </div>
-
-          <!-- Progress Bar -->
-          <div id="progressBar" class="mb-3">
-            <div id="progressFill" style="width: 0%;"></div>
-          </div>
-
-          <!-- Status -->
-          <div id="status" class="text-center fw-bold"></div>
-
-          <!-- Keyboard Shortcuts Info -->
-          <div class="mt-4 pt-3 border-top">
-            <small class="text-muted d-block text-center">
-              <strong>اختصارات لوحة المفاتيح:</strong><br>
-              Ctrl+Enter: التالي | Ctrl+Shift+Enter: السابق | Ctrl+Alt+C: نسخ الكل
-            </small>
-          </div>
-
-        </div>
-      </div>
+  <div class="w-full max-w-2xl">
+    <h1 class="text-2xl font-bold mb-4 text-center">📋 السماح بالوصول للحافظة</h1>
+    <textarea id="inputText" class="p-2 border rounded bg-gray-800 text-white light-mode:bg-white light-mode:text-black"></textarea>
+    <div class="mt-4 flex flex-wrap gap-2 justify-center">
+      <button id="toggleModeBtn" onclick="toggleMode()" class="p-2 bg-blue-600 rounded hover:bg-blue-700">🌓 تبديل الوضع</button>
+      <button id="resetBtn" onclick="resetAll()" class="p-2 bg-red-600 rounded hover:bg-red-700">🔄 إعادة التشغيل</button>
+      <button id="copyAllBtn" onclick="copyAll()" class="p-2 bg-green-600 rounded hover:bg-green-700 hidden">📑 نسخ الكل</button>
+      <button id="copyByNumberBtn" onclick="copyByNumber()" class="p-2 bg-purple-600 rounded hover:bg-purple-700">📌 نسخ حسب الرقم</button>
+      <button id="confirmBtn" onclick="confirmInput()" class="p-2 bg-indigo-600 rounded hover:bg-indigo-700">✅ تأكيد</button>
+      <button id="genBtn" onclick="copyNext()" class="p-2 bg-blue-600 rounded hover:bg-blue-700 hidden">📋 التالي</button>
+      <button id="prevBtn" onclick="copyPrev()" class="p-2 bg-blue-600 rounded hover:bg-blue-700 hidden">↩️ السابق</button>
+      <button id="requestClipboardBtn" class="p-2 bg-gray-600 rounded hover:bg-gray-700 hidden">📋 طلب إذن الحافظة</button>
+    </div>
+    <div class="mt-4">
+      <div id="progressFill" style="width: 0%;"></div>
+      <p id="status" class="text-center mt-2"></p>
     </div>
   </div>
-
-  <!-- Bootstrap JS Bundle -->
-  <script src="JS/bootstrap.bundle.min.js"></script>
-  
   <!-- SweetAlert2 -->
-  <script src="JS/sweetalert2.all.main.js"></script>
-
-  <!-- App Script -->
+  <script src="JS/sweetalert2.all.min.js"></script>
+  <!-- Clipboard.js -->
+  <script src="JS/clipboard.min.js"></script>
   <script src="JS/script.JS"></script>
 </body>
 </html>
-
-
