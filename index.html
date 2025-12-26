@@ -11,21 +11,21 @@
 
 <body class="text-center">
   <div class="container col-md-8 col-lg-6 mx-auto">
-    <h1 class="h4 fw-bold mb-4 text-center">📋 FastCopy</h1>
+    <h1 class="h4 fw-bold mb-4 text-center">Fast Copy 📋</h1>
 
     <textarea
       id="inputText"
-      class="form-control mb-3"
+      class="form-control mb-3 text-white bg-dark"
     ></textarea>
 
     <div class="mt-4 d-flex flex-wrap gap-2 justify-content-center">
       <button id="toggleModeBtn" onclick="toggleMode()" class="btn btn-primary">🌓 تبديل الوضع</button>
       <button id="resetBtn" onclick="resetAll()" class="btn btn-danger">🔄 إعادة التشغيل</button>
-      <button id="copyAllBtn" onclick="copyAll()" class="btn btn-success shadow-none">📑 نسخ الكل</button>
+      <button id="copyAllBtn" onclick="copyAll()" class="btn">📑 نسخ الكل</button>
       <button id="copyByNumberBtn" onclick="copyByNumber()" class="btn btn-secondary">📌 نسخ حسب الرقم</button>
       <button id="confirmBtn" onclick="confirmInput()" class="btn btn-info text-white">✅ تأكيد</button>
-      <button id="genBtn" onclick="copyNext()" class="btn btn-primary shadow-none">📋 التالي</button>
-      <button id="prevBtn" onclick="copyPrev()" class="btn btn-primary shadow-none">↩️ السابق</button>
+      <button id="genBtn" onclick="copyNext()" class="btn">📋 التالي</button>
+      <button id="prevBtn" onclick="copyPrev()" class="btn">↩️ السابق</button>
       <button id="requestClipboardBtn" class="btn btn-secondary">📋 طلب إذن الحافظة</button>
     </div>
 
@@ -40,6 +40,7 @@
   <script src="JS/script.JS"></script>
 </body>
 </html>
+
 
 
 
