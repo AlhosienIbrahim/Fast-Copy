@@ -12,6 +12,7 @@ const CONFIG = {
     INVALID_NUM: 'رقم غير صالح.',
     COPY_ALL_OK: 'تم نسخ جميع السطور بنجاح.',
     CLIPBOARD_ERR: 'فشل النسخ! يرجى السماح بالوصول إلى الحافظة.',
+    NO_DATA: 'لا يوجد بيانات محفوظة للاستئناف.',
     ALLOW_CLIPBOARD: 'السماح بالوصول إلى الحافظة؟',
     CLIPBOARD_NEEDED: 'هذا ضروري لتمكين خاصية النسخ التلقائي.',
     YES: 'نعم، اسمح بذلك',
@@ -37,7 +38,9 @@ const storage = {
   save: (lines, index) => {
     try {
       localStorage.setItem(CONFIG.KEYS.LINES, JSON.stringify({ lines, index, ts: Date.now() }));
-    } catch (e) { console.error('Save failed:', e); }
+    } catch (e) {
+      console.error('Save failed:', e);
+    }
   },
   load: () => {
     try {
@@ -87,7 +90,8 @@ const clipboard = {
       showCancelButton: true,
       confirmButtonText: CONFIG.MSG.YES,
       cancelButtonText: CONFIG.MSG.CANCEL,
-      customClass: { popup: 'swal2-rtl' }
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33'
     });
 
     if (!result.isConfirmed) {
@@ -101,16 +105,17 @@ const clipboard = {
         title: CONFIG.MSG.DONE,
         text: CONFIG.MSG.ACCESS_OK,
         icon: 'success',
-        customClass: { popup: 'swal2-rtl' }
+        confirmButtonColor: '#3085d6'
       });
       localStorage.setItem(CONFIG.KEYS.CLIPBOARD, 'granted');
-      $('requestClipboardBtn').classList.add('d-none');
+      const btn = $('requestClipboardBtn');
+      if (btn) btn.style.display = 'none';
     } catch (e) {
       await Swal.fire({
         title: CONFIG.MSG.ERROR,
         text: e.message,
         icon: 'error',
-        customClass: { popup: 'swal2-rtl' }
+        confirmButtonColor: '#3085d6'
       });
     }
   }
@@ -118,8 +123,15 @@ const clipboard = {
 
 // UI helpers
 const ui = {
-  showBtns: () => ['genBtn', 'prevBtn', 'copyAllBtn'].forEach(id => $(id)?.classList.remove('d-none')),
-  hideBtns: () => ['genBtn', 'prevBtn', 'copyAllBtn'].forEach(id => $(id)?.classList.add('d-none')),
+  showBtns: () => ['genBtn', 'prevBtn', 'copyAllBtn'].forEach(id => {
+    const el = $(id);
+    if (el) el.style.display = 'inline-block';
+  }),
+  
+  hideBtns: () => ['genBtn', 'prevBtn', 'copyAllBtn', 'resumeBtn'].forEach(id => {
+    const el = $(id);
+    if (el) el.style.display = 'none';
+  }),
   
   flash: id => {
     const el = $(id);
@@ -132,17 +144,15 @@ const ui = {
     title: CONFIG.MSG.ERROR,
     text: msg,
     icon: 'warning',
-    customClass: { popup: 'swal2-rtl' }
+    confirmButtonColor: '#3085d6'
   }),
   
   showInfo: (title, msg) => Swal.fire({
-    title, text: msg, icon: 'info',
-    customClass: { popup: 'swal2-rtl' }
+    title, text: msg, icon: 'info', confirmButtonColor: '#3085d6'
   }),
   
   showSuccess: (title, msg) => Swal.fire({
-    title, text: msg, icon: 'success', timer: 2000,
-    customClass: { popup: 'swal2-rtl' }
+    title, text: msg, icon: 'success', confirmButtonColor: '#3085d6', timer: 2000
   }),
   
   async promptNum(max) {
@@ -158,7 +168,8 @@ const ui = {
       showCancelButton: true,
       confirmButtonText: CONFIG.MSG.COPY,
       cancelButtonText: CONFIG.MSG.CANCEL,
-      customClass: { popup: 'swal2-rtl' }
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33'
     });
   }
 };
@@ -210,11 +221,14 @@ class App {
         this.reset();
       }
     });
+
+    $('requestClipboardBtn')?.addEventListener('click', () => clipboard.requestPermission());
   }
 
   checkClipboardPermission() {
     if (localStorage.getItem(CONFIG.KEYS.CLIPBOARD) !== 'granted') {
-      $('requestClipboardBtn')?.classList.remove('d-none');
+      const btn = $('requestClipboardBtn');
+      if (btn) btn.style.display = 'block';
     }
   }
 
@@ -352,7 +366,6 @@ window.copyByNumber = () => app?.copyByNum();
 window.copyAll = () => app?.copyAll();
 window.resetAll = () => app?.reset();
 window.toggleMode = () => app?.toggleMode();
-window.clipboard = clipboard;
 
 // Initialize
 window.addEventListener('DOMContentLoaded', () => {
@@ -364,7 +377,7 @@ window.addEventListener('DOMContentLoaded', () => {
       title: 'خطأ في التهيئة',
       text: 'حدث خطأ أثناء تشغيل التطبيق.',
       icon: 'error',
-      customClass: { popup: 'swal2-rtl' }
+      confirmButtonColor: '#3085d6'
     });
   }
 });
