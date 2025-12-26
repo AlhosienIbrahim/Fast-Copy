@@ -128,7 +128,10 @@ const ui = {
     if (el) el.style.display = 'inline-block';
   }),
   
-
+  hideBtns: () => ['genBtn', 'prevBtn', 'copyAllBtn', 'resumeBtn'].forEach(id => {
+    const el = $(id);
+    if (el) el.style.display = 'none';
+  }),
   
   flash: id => {
     const el = $(id);
@@ -378,4 +381,5 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+
 
